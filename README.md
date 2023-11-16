@@ -19,7 +19,7 @@
 
 ## 程序原理
 
-这个程序使用了HashHelper类](https://blog.csdn.net/beauthy/article/details/107210130)来计算指定文件的哈希值，该类提供了两个静态方法：ComputeMD5 和 ComputeSHA1，分别用于计算文件的 MD5 值和 SHA1 值。这两个方法的实现原理如下：
+这个程序使用了[HashHelper类](https://blog.csdn.net/beauthy/article/details/107210130)来计算指定文件的哈希值，该类提供了两个静态方法：ComputeMD5 和 ComputeSHA1，分别用于计算文件的 MD5 值和 SHA1 值。这两个方法的实现原理如下：
 
 - 打开文件流，读取文件的字节数据。
 - 创建 MD5 或 SHA1 的加密服务提供者对象，调用其 ComputeHash 方法，传入文件的字节数据，得到哈希值的字节数组。

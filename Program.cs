@@ -6,10 +6,18 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Security.Cryptography;
 
+
+
 namespace HashReader
 {
     class Program
     {
+        // 添加一个静态变量来记录上一个任务的类型
+        static string lastTask = "";
+
+        // 添加一个列表用于存储历史查询记录
+        static List<string> historyQueries = new List<string>();
+
         static void Main(string[] args)
         {
             Console.WriteLine("欢迎使用哈希值读取程序。");
@@ -19,10 +27,12 @@ namespace HashReader
         // 显示菜单
         static void ShowMenu()
         {
+            Console.Clear(); // 清空控制台内容
             Console.WriteLine("请选择一个操作：");
             Console.WriteLine("1. 打开文件");
             Console.WriteLine("2. 比较文件");
-            Console.WriteLine("3. 退出程序");
+            Console.WriteLine("3. 历史查询记录");
+            Console.WriteLine("4. 退出程序");
             Console.Write("请输入你的选择：");
             string choice = Console.ReadLine();
             switch (choice)
@@ -34,6 +44,9 @@ namespace HashReader
                     CompareFiles();
                     break;
                 case "3":
+                    ShowHistory();
+                    break;
+                case "4":
                     ExitProgram();
                     break;
                 default:
@@ -46,6 +59,9 @@ namespace HashReader
         // 打开文件并显示哈希值
         static void OpenFile()
         {
+            Console.Clear(); // 清空控制台内容
+            // 更新上一个任务的类型
+            lastTask = "打开文件";
             Console.Write("请输入要打开的文件路径：");
             string filePath = Console.ReadLine();
             if (File.Exists(filePath))
@@ -55,17 +71,27 @@ namespace HashReader
                 string hashSHA1 = HashHelper.ComputeSHA1(filePath);
                 Console.WriteLine($"文件的 MD5 值是：{hashMD5}");
                 Console.WriteLine($"文件的 SHA1 值是：{hashSHA1}");
+
+                // 将查询记录添加到历史查询列表
+                historyQueries.Add($"类型: {lastTask}, 文件路径: {filePath}, MD5: {hashMD5}, SHA1: {hashSHA1}");
+
+                // 显示选项
+                ShowOptions();
             }
             else
             {
                 Console.WriteLine("文件不存在，请检查路径是否正确。");
+                // 显示选项
+                ShowOptions();
             }
-            ShowOptions();
         }
 
         // 比较两个文件的哈希值
         static void CompareFiles()
         {
+            Console.Clear(); // 清空控制台内容
+            // 更新上一个任务的类型
+            lastTask = "比较文件";
             Console.Write("请输入第一个文件的路径：");
             string filePath1 = Console.ReadLine();
             Console.Write("请输入第二个文件的路径：");
@@ -81,6 +107,11 @@ namespace HashReader
                 Console.WriteLine($"第二个文件的 MD5 值是：{hashMD52}");
                 Console.WriteLine($"第一个文件的 SHA1 值是：{hashSHA11}");
                 Console.WriteLine($"第二个文件的 SHA1 值是：{hashSHA12}");
+
+                // 将查询记录添加到历史查询列表
+                historyQueries.Add($"类型: {lastTask}, 文件1路径: {filePath1}, MD5: {hashMD51}, SHA1: {hashSHA11}");
+                historyQueries.Add($"类型: {lastTask}, 文件2路径: {filePath2}, MD5: {hashMD52}, SHA1: {hashSHA12}");
+
                 if (hashMD51 == hashMD52)
                 {
                     Console.ForegroundColor = ConsoleColor.Blue;
@@ -105,51 +136,93 @@ namespace HashReader
                     Console.WriteLine("两个文件的 SHA1 值不同。");
                     Console.ResetColor();
                 }
+
+                // 显示选项
+                ShowOptions();
             }
             else
             {
                 Console.WriteLine("文件不存在，请检查路径是否正确。");
+                // 显示选项
+                ShowOptions();
             }
-            ShowOptions();
+        }
+
+        // 显示历史查询记录
+        static void ShowHistory()
+        {
+            Console.Clear(); // 清空控制台内容
+            // 更新上一个任务的类型
+            lastTask = "历史查询记录";
+
+            if (historyQueries.Count > 0)
+            {
+                Console.WriteLine("历史查询记录：");
+                foreach (var query in historyQueries)
+                {
+                    Console.WriteLine(query);
+                }
+            }
+            else
+            {
+                Console.WriteLine("暂无历史查询记录。");
+            }
+
+            // 移除继续操作选项
+            ShowOptions(false);
         }
 
         // 退出程序
         static void ExitProgram()
         {
+            Console.Clear(); // 清空控制台内容
             Console.WriteLine("感谢使用哈希值读取程序，再见。");
             Environment.Exit(0);
         }
 
         // 显示选项
-        static void ShowOptions()
+        static void ShowOptions(bool showContinueOption = true)
         {
+            Console.WriteLine();
             Console.WriteLine("请选择一个选项：");
-            Console.WriteLine("1. 继续操作");
-            Console.WriteLine("2. 返回菜单");
-            Console.WriteLine("3. 退出程序");
+            if (showContinueOption)
+            {
+                Console.WriteLine("1. 继续操作");
+            }
+            Console.WriteLine("1. 返回菜单");
+            Console.WriteLine("2. 退出程序");
             Console.Write("请输入你的选择：");
             string option = Console.ReadLine();
             switch (option)
             {
                 case "1":
-                    if (Console.Title == "打开文件")
+                    // 根据上一个任务的类型来决定继续操作的行为
+                    if (lastTask == "打开文件")
                     {
                         OpenFile();
                     }
-                    else if (Console.Title == "比较文件")
+                    else if (lastTask == "比较文件")
                     {
                         CompareFiles();
                     }
+                    else if (lastTask == "历史查询记录")
+                    {
+                        ShowMenu();
+                    }
                     break;
                 case "2":
-                    ShowMenu();
-                    break;
-                case "3":
-                    ExitProgram();
+                    if (lastTask == "打开文件" || lastTask == "比较文件")
+                    {
+                        ShowMenu();
+                    }
+                    else
+                    {
+                        ExitProgram();
+                    }
                     break;
                 default:
                     Console.WriteLine("无效的输入，请重新选择。");
-                    ShowOptions();
+                    ShowOptions(showContinueOption);
                     break;
             }
         }
@@ -209,4 +282,3 @@ namespace HashReader
         }//ComputeSHA1
     }
 }
-
