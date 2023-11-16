@@ -7,7 +7,6 @@ using System.IO;
 using System.Security.Cryptography;
 
 
-
 namespace HashReader
 {
     class Program
@@ -17,6 +16,9 @@ namespace HashReader
 
         // 添加一个列表用于存储历史查询记录
         static List<string> historyQueries = new List<string>();
+
+        // 添加一个对象用于锁定历史查询记录
+        static object historyLock = new object();
 
         static void Main(string[] args)
         {
@@ -73,7 +75,7 @@ namespace HashReader
                 Console.WriteLine($"文件的 SHA1 值是：{hashSHA1}");
 
                 // 将查询记录添加到历史查询列表
-                historyQueries.Add($"类型: {lastTask}, 文件路径: {filePath}, MD5: {hashMD5}, SHA1: {hashSHA1}");
+                AddToHistory($"类型: {lastTask}, 文件路径: {filePath}, MD5: {hashMD5}, SHA1: {hashSHA1}");
 
                 // 显示选项
                 ShowOptions();
@@ -109,8 +111,8 @@ namespace HashReader
                 Console.WriteLine($"第二个文件的 SHA1 值是：{hashSHA12}");
 
                 // 将查询记录添加到历史查询列表
-                historyQueries.Add($"类型: {lastTask}, 文件1路径: {filePath1}, MD5: {hashMD51}, SHA1: {hashSHA11}");
-                historyQueries.Add($"类型: {lastTask}, 文件2路径: {filePath2}, MD5: {hashMD52}, SHA1: {hashSHA12}");
+                AddToHistory($"类型: {lastTask}, 文件1路径: {filePath1}, MD5: {hashMD51}, SHA1: {hashSHA11}");
+                AddToHistory($"类型: {lastTask}, 文件2路径: {filePath2}, MD5: {hashMD52}, SHA1: {hashSHA12}");
 
                 if (hashMD51 == hashMD52)
                 {
@@ -158,9 +160,11 @@ namespace HashReader
             if (historyQueries.Count > 0)
             {
                 Console.WriteLine("历史查询记录：");
-                foreach (var query in historyQueries)
+                Console.WriteLine("------------------------------------------");
+                for (int i = 0; i < historyQueries.Count; i++)
                 {
-                    Console.WriteLine(query);
+                    Console.WriteLine($"[{i + 1}] {historyQueries[i]}");
+                    Console.WriteLine("------------------------------------------");
                 }
             }
             else
@@ -226,6 +230,16 @@ namespace HashReader
                     break;
             }
         }
+
+        // 将查询记录添加到历史查询列表
+        static void AddToHistory(string query)
+        {
+            // 使用锁确保多线程安全访问列表
+            lock (historyLock)
+            {
+                historyQueries.Add(query);
+            }
+        }
     }
 
     // 提供用于计算指定文件哈希值的方法
@@ -245,7 +259,7 @@ namespace HashReader
                     Byte[] buffer = calculator.ComputeHash(fs);
                     calculator.Clear();
                     //将字节数组转换成十六进制的字符串形式
-                    StringBuilder stringBuilder = new StringBuilder();
+                    System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
                     for (int i = 0; i < buffer.Length; i++)
                     {
                         stringBuilder.Append(buffer[i].ToString("x2"));
@@ -270,7 +284,7 @@ namespace HashReader
                     Byte[] buffer = calculator.ComputeHash(fs);
                     calculator.Clear();
                     //将字节数组转换成十六进制的字符串形式
-                    StringBuilder stringBuilder = new StringBuilder();
+                    System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
                     for (int i = 0; i < buffer.Length; i++)
                     {
                         stringBuilder.Append(buffer[i].ToString("x2"));
