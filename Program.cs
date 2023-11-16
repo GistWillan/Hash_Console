@@ -7,7 +7,6 @@ using System.IO;
 using System.Security.Cryptography;
 
 
-
 namespace HashReader
 {
     class Program
@@ -18,9 +17,19 @@ namespace HashReader
         // 添加一个列表用于存储历史查询记录
         static List<string> historyQueries = new List<string>();
 
+        // 添加一个对象用于锁定历史查询记录
+        static object historyLock = new object();
+
+        // 添加一个常量用于存储历史记录文件的路径
+        const string HistoryFilePath = "history.txt";
+
         static void Main(string[] args)
         {
             Console.WriteLine("欢迎使用哈希值读取程序。");
+
+            // 加载历史记录
+            LoadHistory();
+
             ShowMenu();
         }
 
@@ -73,7 +82,7 @@ namespace HashReader
                 Console.WriteLine($"文件的 SHA1 值是：{hashSHA1}");
 
                 // 将查询记录添加到历史查询列表
-                historyQueries.Add($"类型: {lastTask}, 文件路径: {filePath}, MD5: {hashMD5}, SHA1: {hashSHA1}");
+                AddToHistory($"类型: {lastTask}, 文件路径: {filePath}, MD5: {hashMD5}, SHA1: {hashSHA1}");
 
                 // 显示选项
                 ShowOptions();
@@ -109,8 +118,8 @@ namespace HashReader
                 Console.WriteLine($"第二个文件的 SHA1 值是：{hashSHA12}");
 
                 // 将查询记录添加到历史查询列表
-                historyQueries.Add($"类型: {lastTask}, 文件1路径: {filePath1}, MD5: {hashMD51}, SHA1: {hashSHA11}");
-                historyQueries.Add($"类型: {lastTask}, 文件2路径: {filePath2}, MD5: {hashMD52}, SHA1: {hashSHA12}");
+                AddToHistory($"类型: {lastTask}, 文件1路径: {filePath1}, MD5: {hashMD51}, SHA1: {hashSHA11}");
+                AddToHistory($"类型: {lastTask}, 文件2路径: {filePath2}, MD5: {hashMD52}, SHA1: {hashSHA12}");
 
                 if (hashMD51 == hashMD52)
                 {
@@ -158,9 +167,11 @@ namespace HashReader
             if (historyQueries.Count > 0)
             {
                 Console.WriteLine("历史查询记录：");
-                foreach (var query in historyQueries)
+                Console.WriteLine("------------------------------------------");
+                for (int i = 0; i < historyQueries.Count; i++)
                 {
-                    Console.WriteLine(query);
+                    Console.WriteLine($"[{i + 1}] {historyQueries[i]}");
+                    Console.WriteLine("------------------------------------------");
                 }
             }
             else
@@ -177,6 +188,10 @@ namespace HashReader
         {
             Console.Clear(); // 清空控制台内容
             Console.WriteLine("感谢使用哈希值读取程序，再见。");
+
+            // 保存历史记录
+            SaveHistory();
+
             Environment.Exit(0);
         }
 
@@ -189,8 +204,8 @@ namespace HashReader
             {
                 Console.WriteLine("1. 继续操作");
             }
-            Console.WriteLine("1. 返回菜单");
-            Console.WriteLine("2. 退出程序");
+            Console.WriteLine("2. 返回菜单");
+            Console.WriteLine("3. 退出程序");
             Console.Write("请输入你的选择：");
             string option = Console.ReadLine();
             switch (option)
@@ -220,10 +235,55 @@ namespace HashReader
                         ExitProgram();
                     }
                     break;
+                case "3":
+                    ExitProgram();
+                    break;
                 default:
                     Console.WriteLine("无效的输入，请重新选择。");
                     ShowOptions(showContinueOption);
                     break;
+            }
+        }
+
+        // 将查询记录添加到历史查询列表
+        static void AddToHistory(string query)
+        {
+            // 使用锁确保多线程安全访问列表
+            lock (historyLock)
+            {
+                historyQueries.Add(query);
+            }
+
+            // 保存历史记录
+            SaveHistory();
+        }
+
+        // 保存历史记录到文件
+        static void SaveHistory()
+        {
+            try
+            {
+                File.WriteAllLines(HistoryFilePath, historyQueries);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"无法保存历史记录：{ex.Message}");
+            }
+        }
+
+        // 从文件加载历史记录
+        static void LoadHistory()
+        {
+            if (File.Exists(HistoryFilePath))
+            {
+                try
+                {
+                    historyQueries.AddRange(File.ReadAllLines(HistoryFilePath));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"无法加载历史记录：{ex.Message}");
+                }
             }
         }
     }
@@ -245,7 +305,7 @@ namespace HashReader
                     Byte[] buffer = calculator.ComputeHash(fs);
                     calculator.Clear();
                     //将字节数组转换成十六进制的字符串形式
-                    StringBuilder stringBuilder = new StringBuilder();
+                    System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
                     for (int i = 0; i < buffer.Length; i++)
                     {
                         stringBuilder.Append(buffer[i].ToString("x2"));
@@ -270,7 +330,7 @@ namespace HashReader
                     Byte[] buffer = calculator.ComputeHash(fs);
                     calculator.Clear();
                     //将字节数组转换成十六进制的字符串形式
-                    StringBuilder stringBuilder = new StringBuilder();
+                    System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
                     for (int i = 0; i < buffer.Length; i++)
                     {
                         stringBuilder.Append(buffer[i].ToString("x2"));
