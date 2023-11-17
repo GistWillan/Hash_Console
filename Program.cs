@@ -20,6 +20,9 @@ namespace HashReader
         // 添加一个对象用于锁定历史查询记录
         static object historyLock = new object();
 
+        // 添加一个对象用于锁定历史查询记录
+        static object historyLock = new object();
+
         // 添加一个常量用于存储历史记录文件的路径
         const string HistoryFilePath = "history.txt";
 
@@ -244,6 +247,17 @@ namespace HashReader
                     break;
             }
         }
+
+        // 将查询记录添加到历史查询列表
+        static void AddToHistory(string query)
+        {
+            // 使用锁确保多线程安全访问列表
+            lock (historyLock)
+            {
+                historyQueries.Add(query);
+            }
+        }
+    }
 
         // 将查询记录添加到历史查询列表
         static void AddToHistory(string query)
