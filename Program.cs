@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -180,7 +180,31 @@ namespace HashReader
             }
 
             // 移除继续操作选项
-            ShowOptions(false);
+            ShowHistoryOptions();
+        }
+
+        // 显示历史查询记录的选项
+        static void ShowHistoryOptions()
+        {
+            Console.WriteLine();
+            Console.WriteLine("请选择一个选项：");
+            Console.WriteLine("1. 返回菜单");
+            Console.WriteLine("2. 退出程序");
+            Console.Write("请输入你的选择：");
+            string option = Console.ReadLine();
+            switch (option)
+            {
+                case "1":
+                    ShowMenu();
+                    break;
+                case "2":
+                    ExitProgram();
+                    break;
+                default:
+                    Console.WriteLine("无效的输入，请重新选择。");
+                    ShowHistoryOptions();
+                    break;
+            }
         }
 
         // 退出程序
@@ -196,14 +220,11 @@ namespace HashReader
         }
 
         // 显示选项
-        static void ShowOptions(bool showContinueOption = true)
+        static void ShowOptions()
         {
             Console.WriteLine();
             Console.WriteLine("请选择一个选项：");
-            if (showContinueOption)
-            {
-                Console.WriteLine("1. 继续操作");
-            }
+            Console.WriteLine("1. 继续操作");
             Console.WriteLine("2. 返回菜单");
             Console.WriteLine("3. 退出程序");
             Console.Write("请输入你的选择：");
@@ -219,10 +240,6 @@ namespace HashReader
                     else if (lastTask == "比较文件")
                     {
                         CompareFiles();
-                    }
-                    else if (lastTask == "历史查询记录")
-                    {
-                        ShowMenu();
                     }
                     break;
                 case "2":
@@ -240,7 +257,7 @@ namespace HashReader
                     break;
                 default:
                     Console.WriteLine("无效的输入，请重新选择。");
-                    ShowOptions(showContinueOption);
+                    ShowOptions();
                     break;
             }
         }
